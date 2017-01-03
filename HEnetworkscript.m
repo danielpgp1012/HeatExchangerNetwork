@@ -76,23 +76,23 @@ end
 HotCumHarefined=HotCumHa; ColdCumHarefined=ColdCumHa; NEA=0;
 HotCumHbrefined=HotCumHb; ColdCumHbrefined=ColdCumHb; NEB=0;
 for i=1:sizeC
-    if ColdCumHa(i)==0
-    else
-        for j=1:sizeH
-            if HotCumHa(j)==0
-            elseif abs(HotCumHa(j)-ColdCumHa(i))<1e-3
-                HotCumHarefined(j-NEA)=[]; ColdCumHarefined(i-NEA)=[]; %taken out of consideration
-                NEA=NEA+1;
-            end
-            if abs(HotCumHb(j)-ColdCumHb(i))<1e-3
-                HotCumHbrefined(j-NEB)=[]; ColdCumHbrefined(i-NEB)=[]; %taken out of consideration
-                NEB=NEB+1;
-            end
+    for j=1:sizeH
+        if ColdCumHa(i)==0
+        elseif HotCumHa(j)==0
+        elseif abs(HotCumHa(j)-ColdCumHa(i))<1e-3
+            HotCumHarefined(j-NEA)=[]; ColdCumHarefined(i-NEA)=[]; %taken out of consideration
+            NEA=NEA+1;
+        end
+        if ColdCumHb(i)==0
+        elseif HotCumHa(j)==0
+        elseif abs(HotCumHb(j)-ColdCumHb(i))<1e-3
+            HotCumHbrefined(j-NEB)=[]; ColdCumHbrefined(i-NEB)=[]; %taken out of consideration
+            NEB=NEB+1;
         end
     end
 end
-NEA=NEA+length(HotCumHarefined)+length(ColdCumHarefined)-1; %this formula seems to work lol
-NEB=NEB+length(HotCumHbrefined)+length(ColdCumHbrefined)-1;
+NEA=NEA+length(HotCumHarefined(HotCumHarefined>0))+length(ColdCumHarefined(ColdCumHarefined>0))-1; %this formula seems to work. Need to take away 0 values though lol
+NEB=NEB+length(HotCumHbrefined(HotCumHbrefined>0))+length(ColdCumHbrefined(ColdCumHbrefined>0))-1;
 
 
 
