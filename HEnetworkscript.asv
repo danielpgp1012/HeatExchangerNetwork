@@ -46,33 +46,53 @@ HeatUtility(j:end)=[];Pinch(j:end)=[];
 %Find Cumulative Heat boxes above and below the pinch for specific streams
 HotCumHa=[zeros(sizeH,1);HeatUtility]; ColdCumHa=zeros(sizeC,1);
 HotCumHb=zeros(sizeH,1); ColdCumHb=[zeros(sizeC,1);ColdUtility];
+Habove=zeros(sizeH,5); Hbelow=Habove;
+Cabove=zeros(sizeC,5); Cbelow=Cabove;
+a=1;b=1;
 for i=1:sizeH
     if H(i,3)>Pinch
         if H(i,4)>Pinch
             HotCumHa(i)=(H(i,3)-H(i,4))*H(i,2);
+            Habove(a,:)=[C(i,:),HotCumHa(i)]; %if completely above the pinch
         else
             HotCumHa(i)=(H(i,3)-Pinch)*H(i,2);
             HotCumHb(i)=(Pinch-H(i,4))*H(i,2);
+            Habove(a,:)=[H(i,1:2),Pinch,C(i,4),HotCumHa(i)];
+            Hbelow(b,:)=[H(i,1:2),C(i,3),Pinch,HotCumHb(i)];
         end
     else
         HotCumHb(i)=(H(i,3)-H(i,4))*H(i,2);
+        Habove(a,:)=zeros(1,5);
+        Hbelow(b,:)=[C(i,:),HotCumHb(i)];
     end
+    a=a+1;
+    b=b+1;
 end
+a=1;b=1;
 for i=1:sizeC
     if C(i,4)>Pinch-deltaTmin
         if C(i,3)>Pinch-deltaTmin
             ColdCumHa(i)=(C(i,4)-C(i,3))*C(i,2);
-        else
+            Cabove(a,:)=[C(i,:),ColdCumHa(i)]; %if completely above the pinch
+            Cbelow(b,:)=zeros(1,5); 
+        else %if crosses pinch
             ColdCumHa(i)=(C(i,4)-Pinch+deltaTmin)*C(i,2);
             ColdCumHb(i)=(Pinch-deltaTmin-C(i,3))*C(i,2);
+            Cabove(a,:)=[C(i,1:2),Pinch-deltaTmin,C(i,4),ColdCumHa(i)];
+            Cbelow(b,:)=[C(i,1:2),C(i,3),Pinch-deltaTmin,ColdCumHb(i)];
         end
-    else
+        
+    else %if completely below pinch
         ColdCumHb(i)=(C(i,4)-C(i,3))*C(i,2);
+        Cabove(a,:)=zeros(1,5);
+        Cbelow(b,:)=[C(i,:),ColdCumHb(i)];
     end
+    a=a+1;
+    b=b+1;
 end
 %Find NMin above Pinch
 %Heat exchangers are minimized by first finding good matches: that is,
-%where the remainder is 0
+%where the difference between the heat available vs the heat needed is 0
 HotCumHarefined=HotCumHa; ColdCumHarefined=ColdCumHa; NEA=0;
 HotCumHbrefined=HotCumHb; ColdCumHbrefined=ColdCumHb; NEB=0;
 for i=1:sizeC
@@ -91,10 +111,10 @@ for i=1:sizeC
         end
     end
 end
-lengthHotCumHarefined=length(Ho
-NEA=NEA+length(HotCumHarefined)+length(ColdCumHarefined)-1; %this formula seems to work lol
-NEB=NEB+length(HotCumHbrefined)+length(ColdCumHbrefined)-1;
-
+NEA=NEA+length(HotCumHarefined(HotCumHarefined>0))+length(ColdCumHarefined(ColdCumHarefined>0))-1; %this formula seems to work. Need to take away 0 values though lol
+NEB=NEB+length(HotCumHbrefined(HotCumHbrefined>0))+length(ColdCumHbrefined(ColdCumHbrefined>0))-1;
+%%Find arrangement
+%Habove=[H(:,; Cabove=C;
 
 
             
