@@ -2,17 +2,18 @@ function [H, C,sizeH,sizeC,Tsorted]=hotcoldstreams(streams,deltaTmin)
 %Returns Hot, Cold and temperature intervals using an input of with the
 %inlet and outlet temperatures on the 3rd and 4th columns of the input
 %matrix
+global STREAMNO MCP TINLET TOUTLET ENTHALPY
 sizestreams=size(streams);
 C=zeros(sizestreams);
 H=C;
 j=1;
 k=1;
 for i=1:sizestreams(1)
-    if streams (i,4)>streams(i,3)
-        C(j,:)=streams(i,:);
+    if streams (i,TOUTLET)>streams(i,TINLET)
+        C(j,:)=[j,streams(i,2:end)];
         j=j+1;
     else
-        H(k,:)=streams(i,:);
+        H(k,:)=[k,streams(i,2:end)];
         k=k+1;
     end 
 end 

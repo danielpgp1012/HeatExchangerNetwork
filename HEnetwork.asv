@@ -117,48 +117,108 @@ NEB=NEB+length(HotCumHbrefined(HotCumHbrefined>0))+length(ColdCumHbrefined(ColdC
 %Above the pinch, hot stream cooling takes priority over cold stream
 %heating. 
 %% Sort according to heat capacities
-Hotstreamsabove=newquicksortcoldescending(Hotstreamsabove,1,sizeH,TINLET);
-Coldstreamsabove=newquicksortcoldescending(Coldstreamsabove,1,sizeC,TOUTLET);
-Hotstreamsbelow=newquicksortcoldescending(Hotstreamsbelow,1,sizeH,TINLET);
-Coldstreamsbelow=newquicksortcoldescending(Coldstreamsbelow,1,sizeC,TOUTLET);
+Hotstreamsabove=newquicksortcoldescending(Hotstreamsabove,1,sizeH,ENTHALPY);
+Coldstreamsabove=newquicksortcoldescending(Coldstreamsabove,1,sizeC,ENTHALPY);
+Hotstreamsbelow=newquicksortcoldescending(Hotstreamsbelow,1,sizeH,ENTHALPY);
+Coldstreamsbelow=newquicksortcoldescending(Coldstreamsbelow,1,sizeC,ENTHALPY);
 %First try without splitting. Big loop cycles through hot streams
-%%Initialize Heat Exchanger Arrangement
-%rows are the binary combinations, columns are the 
-HEabove=zeros(sizeH*sizeC,1); HEbelow=HEabove;
+%%Initialize Heat Exchanger Arrangement: The final solution will show the
+%%heat exchangers and the order in which they have been setup by placing
+%%them in a vector where the index is the 
+HEabove=zeros((sizeH+1)*sizeC,2); HEbelow=zeros((sizeH)*(sizeC+1),2); %+1 corresponds to the utility
+k=1;
+for i=1:sizeH+1 %for loop that identifies combinations of streams
+    for j=1:sizeC
+    HEabove(k,1)=10*i+j;
+    k=k+1;
+    end
+end 
+k=1;
+for i=1:sizeH %for loop that identifies combinations of streams
+    for j=1:sizeC+1
+    HEbelow(k,1)=10*i+j;
+    k=k+1;
+    end
+end 
+
 Hotstreamsaboverefined=Hotstreamsabove; Coldstreamsaboverefined=Coldstreamsabove;
+
 N=1; layer=1;
 for i=1:sizeH
     if Hotstreamsaboverefined(i,ENTHALPY)<0.1
+        break;
     else
-    for j=1:sizeC
-        flag=0;
-        if Coldstreamsaboverefined(j,ENTHALPY)<0.1
-        else
-        Hotstreamabovetemp=Hotstreamsaboverefined(i,:);
-        Coldstreamabovetemp=Coldstreamsaboverefined(j,:);
-        [flag, Hotstreamsaboverefined(i,:), Coldstreamsaboverefined(j,:)]=Matching(Hotstreamsabove(i,:),Coldstreamsabove(j,:),deltaTmin,N,NEA,'above')
-        if flag==1
-            Hotstreamsaboverefined(i,:)=Hotstreamabovetemp;
-            Coldstreamsaboverefined(j,:)=Coldstreamabovetemp;
-        else
-            HEabove(sizeC*(i-1)+j)=N;
-            N=N+1;
-            Coldstreamsaboverefined=swap(Coldstreamsaboverefined,layer,j,'r');
-            j=layer;
+        for j=1:sizeC
+            flag=0;
+            if Coldstreamsaboverefined(j,ENTHALPY)<0.1
+                break;
+            else
+                Hotstreamabovetemp=Hotstreamsaboverefined(i,:);
+                Coldstreamabovetemp=Coldstreamsaboverefined(j,:);
+                [flag, Hotstreamsaboverefined(i,:), Coldstreamsaboverefined(j,:)]=Matching(Hotstreamsabove(i,:),Coldstreamsabove(j,:),deltaTmin,N,NEA,'above');
+                if flag==1
+                    Hotstreamsaboverefined(i,:)=Hotstreamabovetemp;
+                    Coldstreamsaboverefined(j,:)=Coldstreamabovetemp;
+                else
+                    HEabove(sizeC*(i-1)+Coldstreamsaboverefined(j,STREAMNO),2)=N;
+                    N=N+1;
+                    Coldstreamsaboverefined=swap(Coldstreamsaboverefined,layer,j,'r');
+                    j=layer; %ensures that next that will be tested is an unused stream
+                    layer=layer+1;
+                end
+                if N==NEA && abs(1-Coldstreamsaboverefined(layer-1,ENTHALPY)/HeatUtility)<1e-4
+                    Coldstreamsaboverefined(layer-1,ENTHALPY)=0;
+                    HEabove(sizeC*(sizeH)+Coldstreamsaboverefined(j,STREAMNO),2)=N;
+                    break;
+                else
+                    flag=1;
+                    Hotstreamsaboverefined(i,:)=Hotstreamabovetemp;
+                    Coldstreamsaboverefined(j,:)=Coldstreamabovetemp;
+                end
+            end
         end
-        if N==Nmin-1 && abs(1-Coldstreamsaboverefined(layer,ENTHALPY)/HeatUtility)<1e-4
-            N=N+1;
-            Coldstreamsaboverefined(layer,ENTHALPY)=0;
+        if N==NEA && flag~=1
             break;
         end
-        end
-    end
-    if N==Nmin
-        break;
-    end
-    if flag==1
-    end
     end
 end
-
-    
+N=1;
+Hotstreamsbelowrefined=Hotstreamsbelow; Coldstreamsbelowrefined=Coldstreamsbelow;
+for i=1:sizeC
+    if Coldstreamsbelowrefined(i,ENTHALPY)<0.1
+        break;
+    else
+        for j=1:sizeH
+            flag=0;
+            if Hotstreamsbelowrefined(j,ENTHALPY)<0.1
+                break;
+            else
+                Hotstreambelowtemp=Hotstreamsbelowrefined(j,:);
+                Coldstreambelowtemp=Coldstreamsbelowrefined(i,:);
+                [flag, Hotstreamsbelowrefined(i,:), Coldstreamsbelowrefined(j,:)]=Matching(Hotstreamsbelow(i,:),Coldstreamsbelow(j,:),deltaTmin,N,NEA,'above');
+                if flag==1
+                    Hotstreamsaboverefined(i,:)=Hotstreambelowtemp;
+                    Coldstreamsaboverefined(j,:)=Coldstreambelowtemp;
+                else
+                    HEbelow(sizeC*(i-1)+Coldstreamsaboverefined(j,STREAMNO),2)=N;
+                    N=N+1;
+                    Hotstreamsbelowrefined=swap(Hotstreamsbelowrefined,layer,j,'r');
+                    j=layer; %ensures that next that will be tested is an unused stream
+                    layer=layer+1;
+                end
+                if N==NEA && abs(1-Coldstreamsaboverefined(layer-1,ENTHALPY)/HeatUtility)<1e-4
+                    Hotstreamsaboverefined(layer-1,ENTHALPY)=0;
+                    HEabove(sizeC*(sizeH)+Coldstreamsaboverefined(j,STREAMNO),2)=N;
+                    break;
+                else
+                    flag=1;
+                    Hotstreamsaboverefined(i,:)=Hotstreamabovetemp;
+                    Coldstreamsaboverefined(j,:)=Coldstreamabovetemp;
+                end
+            end
+        end
+        if N==NEA && flag~=1
+            break;
+        end
+    end
+end    

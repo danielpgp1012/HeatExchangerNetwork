@@ -18,7 +18,7 @@ else
     Q=C(MCP)*(C(TOUTLET)-C(TINLET));
     end
 end
-if flag~=1 && C(ENTHALPY)-Q>=0 && H(ENTHALPY)-Q>=0
+if flag~=1 && C(ENTHALPY)-Q>=0 || H(ENTHALPY)-Q>=0
     Thout=H(TINLET)-Q/H(MCP);
     Tcout=C(TINLET)+Q/C(MCP);
     if N==Nmin-1
@@ -29,5 +29,5 @@ if flag~=1 && C(ENTHALPY)-Q>=0 && H(ENTHALPY)-Q>=0
     Hout=[H(1:2),Thout,H(TOUTLET),H(ENTHALPY)-Q];
     Cout=[C(1:2),Tcout,C(TOUTLET),C(ENTHALPY)-Q];
 else
-    flag=1;
+    flag-
 end
