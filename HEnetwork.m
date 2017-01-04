@@ -1,10 +1,5 @@
+function [NEA,NEB]=HEnetwork(streams,deltaTmin)
 %%This script is meant to run the MUMNE algorithm
-%Initialization of Variables: Take input from user
-%prompt = 'Please enter the desired streams in the following way: [Stream Numbers;mCp; Inlet T;Outlet T]\newline\n';
-%asign input to Info
-%Info = input(prompt);
-ye=[1 0.5 330 160;2 3 220 50;3 1.5 220 105;4 2.5 205 320;5 1 95 150;6 2 40 205];
-Info=ye; %While debugging ye is used as an input
 %%Indeces
 global STREAMNO MCP TINLET TOUTLET ENTHALPY
 STREAMNO=1;
@@ -16,7 +11,7 @@ ENTHALPY=5;
 %deltaTmin=input(prompt2);
 deltaTmin=10;
 %%Identify and Separate hot and cold streams and Temperature Intervals
-[Hotstreams,Coldstreams,sizeH,sizeC,Tintervals]=hotcoldstreams(Info,deltaTmin);
+[Hotstreams,Coldstreams,sizeH,sizeC,Tintervals]=hotcoldstreams(streams,deltaTmin);
 %%Cascade Diagram.. Need to find graphical representation
 [heatbox, HeatUtility, ColdUtility, Pinch]=Cascade(Tintervals, Hotstreams, Coldstreams, sizeH, sizeC,deltaTmin);
 %% Min No. Exchangers above and below pinch
@@ -127,9 +122,4 @@ Coldstreamsabove=newquicksortcoldescending(Coldstreamsabove,1,sizeC,TOUTLET);
 Hotstreamsbelow=newquicksortcoldescending(Hotstreamsbelow,1,sizeH,TINLET);
 Coldstreamsbelow=newquicksortcoldescending(Coldstreamsbelow,1,sizeC,TOUTLET);
 %First try without splitting. Big loop cycles through hot streams
-
-
-            
-
-
-
+end
