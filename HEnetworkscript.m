@@ -1,47 +1,17 @@
-%take input from user
+%%This script is meant to run the MUMNE algorithm
+%Initialization of Variables: Take input from user
 %prompt = 'Please enter the desired streams in the following way: [Stream Numbers;mCp; Inlet T;Outlet T]\newline\n';
 %asign input to Info
 %Info = input(prompt);
-Info=ye;
+ye=[1 0.5 330 160;2 3 220 50;3 1.5 220 105;4 2.5 205 320;5 1 95 150;6 2 40 205];
+Info=ye; %While debugging ye is used as an input
 %prompt2='please enter the desired minimum temperature difference\n';
 %deltaTmin=input(prompt2);
 deltaTmin=10;
-%Separate hot and cold streams and Temperature Intervals
+%%Identify and Separate hot and cold streams and Temperature Intervals
 [H,C,sizeH,sizeC,Tintervals]=hotcoldstreams(Info,deltaTmin);
-%Cascade Diagram.. Need to find graphical representation
-Sizeintervals=length(Tintervals);
-mcpsum=zeros(Sizeintervals-1,1); heatbox=mcpsum; cumH=0; %intialize new counters, heat capacities and cum enthalpies
-HeatUtility=mcpsum; Pinch=mcpsum; j=1;
-for i=1:Sizeintervals-1
-    hu=1;cu=1;
-    while hu<=sizeH || cu<=sizeC
-        %first check whether streams are within interval
-        if hu>sizeH
-        elseif Tintervals(i+1)<H(hu,3)...
-                && Tintervals(i)>H(hu,4) 
-            mcpsum(i)=mcpsum(i)+H(hu,2);
-        end
-        if cu>sizeC
-        elseif Tintervals(i+1)<C(cu,4)+deltaTmin...
-                && Tintervals(i)>C(cu,3)+deltaTmin
-            mcpsum(i)=mcpsum(i)-C(cu,2);
-        end
-        hu=hu+1;
-        cu=cu+1;
-    end
-    heatbox(i)=mcpsum(i)*(Tintervals(i)-Tintervals(i+1));
-    cumH=cumH+heatbox(i);
-    if cumH<=0
-        Pinch(j)=Tintervals(i+1);
-        HeatUtility(j)=-cumH;
-        cumH=0;
-        j=j+1;
-    end
-    if i+1==Sizeintervals
-        ColdUtility=cumH;
-    end
-end
-HeatUtility(j:end)=[];Pinch(j:end)=[];
+%%Cascade Diagram.. Need to find graphical representation
+[heatbox, HeatUtility, ColdUtility, Pinch]=Cascade(Tintervals, H, C, sizeH, sizeC,deltaTmin);
 %% Min No. Exchangers above and below pinch
 %Find Cumulative Heat boxes above and below the pinch for specific streams
 HotCumHa=[zeros(sizeH,1);HeatUtility]; ColdCumHa=zeros(sizeC,1);
