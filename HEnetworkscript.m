@@ -5,13 +5,19 @@
 %Info = input(prompt);
 ye=[1 0.5 330 160;2 3 220 50;3 1.5 220 105;4 2.5 205 320;5 1 95 150;6 2 40 205];
 Info=ye; %While debugging ye is used as an input
+%%Indeces
+STREAMNO=1;
+MCP=2;
+TINLET=3;
+TOUTLET=4;
+ENTHALPY=5;
 %prompt2='please enter the desired minimum temperature difference\n';
 %deltaTmin=input(prompt2);
 deltaTmin=10;
 %%Identify and Separate hot and cold streams and Temperature Intervals
-[H,C,sizeH,sizeC,Tintervals]=hotcoldstreams(Info,deltaTmin);
+[Hotstreams,Coldstreams,sizeH,sizeC,Tintervals]=hotcoldstreams(Info,deltaTmin);
 %%Cascade Diagram.. Need to find graphical representation
-[heatbox, HeatUtility, ColdUtility, Pinch]=Cascade(Tintervals, H, C, sizeH, sizeC,deltaTmin);
+[heatbox, HeatUtility, ColdUtility, Pinch]=Cascade(Tintervals, Hotstreams, Coldstreams, sizeH, sizeC,deltaTmin);
 %% Min No. Exchangers above and below pinch
 %Find Cumulative Heat boxes above and below the pinch for specific streams
 %Nomenclature: HotCumHa=Cumulative Enthalpy of specific hot streams above
@@ -25,32 +31,32 @@ deltaTmin=10;
 %PREALLOCATE VARIABLES
 HotCumHa=[zeros(sizeH,1);HeatUtility]; ColdCumHa=zeros(sizeC,1);
 HotCumHb=zeros(sizeH,1); ColdCumHb=[zeros(sizeC,1);ColdUtility];
-Habove=zeros(sizeH,5); Hbelow=Habove;
-Cabove=zeros(sizeC,5); Cbelow=Cabove;
+Hotstreamsabove=zeros(sizeH,5); Hotstreamsbelow=Hotstreamsabove;
+Coldstreamsabove=zeros(sizeC,5); Coldstreamsbelow=Coldstreamsabove;
 a=1;b=1; %counters: a=above b=below
 %Hot streams' enthalpy above and below is found by checking if the 
 %temperatures cross or not the pinch temperature. If the temperature 
 %crosses the pinch, then the heat of the stream must be split accordingly. 
 for i=1:sizeH
-    if H(i,3)>Pinch
-        if H(i,4)>Pinch
-            HotCumHa(i)=(H(i,3)-H(i,4))*H(i,2);
-            Habove(a,:)=[H(i,:),HotCumHa(i)]; %if completely above the pinch
+    if Hotstreams(i,TINLET)>Pinch
+        if Hotstreams(i,TOUTLET)>Pinch
+            HotCumHa(i)=(Hotstreams(i,TINLET)-Hotstreams(i,TOUTLET))*Hotstreams(i,MCP);
+            Hotstreamsabove(a,:)=[Hotstreams(i,:),HotCumHa(i)]; %if completely above the pinch
         else
-            HotCumHa(i)=(H(i,3)-Pinch)*H(i,2);
-            HotCumHb(i)=(Pinch-H(i,4))*H(i,2);
-            Habove(a,:)=[H(i,1:2),H(i,3),Pinch,HotCumHa(i)];
-            Hbelow(b,:)=[H(i,1:2),Pinch,H(i,4),HotCumHb(i)];
+            HotCumHa(i)=(Hotstreams(i,TINLET)-Pinch)*Hotstreams(i,MCP);
+            HotCumHb(i)=(Pinch-Hotstreams(i,TOUTLET))*Hotstreams(i,MCP);
+            Hotstreamsabove(a,:)=[Hotstreams(i,1:2),Hotstreams(i,TINLET),Pinch,HotCumHa(i)];
+            Hotstreamsbelow(b,:)=[Hotstreams(i,1:2),Pinch,Hotstreams(i,TOUTLET),HotCumHb(i)];
         end
     else
-        HotCumHb(i)=(H(i,3)-H(i,4))*H(i,2);
-        Hbelow(b,:)=[H(i,:),HotCumHb(i)];
+        HotCumHb(i)=(Hotstreams(i,TINLET)-Hotstreams(i,TOUTLET))*Hotstreams(i,MCP);
+        Hotstreamsbelow(b,:)=[Hotstreams(i,:),HotCumHb(i)];
     end
-    if Habove(a,5)<0.1 %make row=0
-       Habove(a,:)=zeros(1,5);
+    if Hotstreamsabove(a,ENTHALPY)<0.1 %make row=0
+       Hotstreamsabove(a,:)=zeros(1,ENTHALPY);
     end
-    if Hbelow(b,5)<0.1 %make row =0 if no heat can be transferred
-       Hbelow(b,:)=zeros(1,5);
+    if Hotstreamsbelow(b,ENTHALPY)<0.1 %make row =0 if no heat can be transferred
+       Hotstreamsbelow(b,:)=zeros(1,5);
     end
     a=a+1;
     b=b+1;
@@ -58,26 +64,26 @@ end
 %Similar for loop for the cold streams. 
 a=1;b=1;
 for i=1:sizeC
-    if C(i,4)>Pinch-deltaTmin
-        if C(i,3)>Pinch-deltaTmin
-            ColdCumHa(i)=(C(i,4)-C(i,3))*C(i,2);
-            Cabove(a,:)=[C(i,:),ColdCumHa(i)]; %if completely above the pinch
+    if Coldstreams(i,TOUTLET)>Pinch-deltaTmin
+        if Coldstreams(i,TINLET)>Pinch-deltaTmin
+            ColdCumHa(i)=(Coldstreams(i,TOUTLET)-Coldstreams(i,TINLET))*Coldstreams(i,MCP);
+            Coldstreamsabove(a,:)=[Coldstreams(i,:),ColdCumHa(i)]; %if completely above the pinch
         else %if crosses pinch
-            ColdCumHa(i)=(C(i,4)-Pinch+deltaTmin)*C(i,2);
-            ColdCumHb(i)=(Pinch-deltaTmin-C(i,3))*C(i,2);
-            Cabove(a,:)=[C(i,1:2),Pinch-deltaTmin,C(i,4),ColdCumHa(i)];
-            Cbelow(b,:)=[C(i,1:2),C(i,3),Pinch-deltaTmin,ColdCumHb(i)];
+            ColdCumHa(i)=(Coldstreams(i,TOUTLET)-Pinch+deltaTmin)*Coldstreams(i,MCP);
+            ColdCumHb(i)=(Pinch-deltaTmin-Coldstreams(i,TINLET))*Coldstreams(i,MCP);
+            Coldstreamsabove(a,:)=[Coldstreams(i,1:2),Pinch-deltaTmin,Coldstreams(i,TOUTLET),ColdCumHa(i)];
+            Coldstreamsbelow(b,:)=[Coldstreams(i,1:2),Coldstreams(i,TINLET),Pinch-deltaTmin,ColdCumHb(i)];
         end
         
     else %if completely below pinch
-        ColdCumHb(i)=(C(i,4)-C(i,3))*C(i,2);
-        Cbelow(b,:)=[C(i,:),ColdCumHb(i)];
+        ColdCumHb(i)=(Coldstreams(i,TOUTLET)-Coldstreams(i,TINLET))*Coldstreams(i,MCP);
+        Coldstreamsbelow(b,:)=[Coldstreams(i,:),ColdCumHb(i)];
     end
-    if Cabove(a,5)<0.1 %make row=0
-       Cabove(a,:)=zeros(1,5);
+    if Coldstreamsabove(a,ENTHALPY)<0.1 %make row=0
+       Coldstreamsabove(a,:)=zeros(1,5);
     end
-    if Cbelow(b,5)<0.1 %make row =0 if no heat can be transferred
-       Cbelow(b,:)=zeros(1,5);
+    if Coldstreamsbelow(b,ENTHALPY)<0.1 %make row =0 if no heat can be transferred
+       Coldstreamsbelow(b,:)=zeros(1,5);
     end
     a=a+1;
     b=b+1;
@@ -115,10 +121,10 @@ NEB=NEB+length(HotCumHbrefined(HotCumHbrefined>0))+length(ColdCumHbrefined(ColdC
 %Above the pinch, hot stream cooling takes priority over cold stream
 %heating. 
 %% Sort according to heat capacities
-Habove=newquicksortdescending(Habove,1,sizeH,2);
-Cabove=newquicksortdescending(Cabove,1,sizeC,2);
-Hbelow=newquicksortdescending(Hbelow,1,sizeH,2);
-Cbelow=newquicksortdescending(Cbelow,1,sizeC,2);
+Hotstreamsabove=newquicksortdescending(Hotstreamsabove,1,sizeH,2);
+Coldstreamsabove=newquicksortdescending(Coldstreamsabove,1,sizeC,2);
+Hotstreamsbelow=newquicksortdescending(Hotstreamsbelow,1,sizeH,2);
+Coldstreamsbelow=newquicksortdescending(Coldstreamsbelow,1,sizeC,2);
 %First try without splitting. Big loop cycles through hot streams
 
 

@@ -1,4 +1,6 @@
 function [flag, Hout, Cout]=Matching(H,C,deltaTmin,N,Nmin,position)
+%%This function is meant to calculate the heat exchanged between two
+%%individual streams, therefore, the inputs are single vectors for H and C
 Hout=zeros(1,length(H));Cout=zeros(1,length(C)); flag=0;
 if H(3)<C(3)
     flag=1;
