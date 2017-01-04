@@ -4,6 +4,7 @@ if nargin==1
     right=length(sorted);
     rcnum=1;
 end
+
 if left<right
         ii=left;
         jj=right;
