@@ -122,4 +122,45 @@ Coldstreamsabove=newquicksortcoldescending(Coldstreamsabove,1,sizeC,TOUTLET);
 Hotstreamsbelow=newquicksortcoldescending(Hotstreamsbelow,1,sizeH,TINLET);
 Coldstreamsbelow=newquicksortcoldescending(Coldstreamsbelow,1,sizeC,TOUTLET);
 %First try without splitting. Big loop cycles through hot streams
+%%Initialize Heat Exchanger Arrangement
+%rows are the binary combinations, columns are the 
+HEabove=zeros(sizeH*sizeC,1); HEbelow=HEabove;
+Hotstreamsaboverefined=Hotstreamsabove; Coldstreamsaboverefined=Coldstreamsabove;
+N=1; layer=1;
+for i=1:sizeH
+    if Hotstreamsaboverefined(i,ENTHALPY)<0.1
+    else
+    for j=1:sizeC
+        flag=0;
+        if Coldstreamsaboverefined(j,ENTHALPY)<0.1
+        else
+        Hotstreamabovetemp=Hotstreamsaboverefined(i,:);
+        Coldstreamabovetemp=Coldstreamsaboverefined(j,:);
+        [flag, Hotstreamsaboverefined(i,:), Coldstreamsaboverefined(j,:)]=Matching(Hotstreamsabove(i,:),Coldstreamsabove(j,:),deltaTmin,N,NEA,'above')
+        if flag==1
+            Hotstreamsaboverefined(i,:)=Hotstreamabovetemp;
+            Coldstreamsaboverefined(j,:)=Coldstreamabovetemp;
+        else
+            HEabove(sizeC*(i-1)+j)=N;
+            N=N+1;
+            Coldstreamsaboverefined=swap(Coldstreamsaboverefined,layer,j,'r');
+            j=layer;
+        end
+        if N==NEA && abs(1-Coldstreamsaboverefined(layer,ENTHALPY)/HeatUtility)<1e-4
+            Coldstreamsaboverefined(layer,ENTHALPY)=0;
+            HEabove(sizeC*(sizeH-1)+j)=N;
+            break;
+        else
+            flag=1;
+            Hotstreamsaboverefined(i,:)=Hotstreamabovetemp;
+            Coldstreamsaboverefined(j,:)=Coldstreamabovetemp;
+        end
+        end
+    end
+    if N==NEA
+        break;
+    end
+    end
 end
+
+    

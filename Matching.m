@@ -7,7 +7,7 @@ if H(TINLET)<C(TINLET)
     flag=1;
 elseif H(MCP)<C(MCP)
     if C(TINLET)+deltaTmin>=H(TOUTLET)
-    Q=H(MCP)*(H(TINLET)-C(TINLET)+deltaTmin);
+    Q=H(MCP)*(H(TINLET)-(C(TINLET)+deltaTmin));
     else
     Q=H(MCP)*(H(TINLET)-H(TOUTLET));
     end
@@ -24,10 +24,8 @@ if flag~=1 && Q>0
     if N==Nmin-1
         if strcmp(position,'above') && abs(Thout-H(4))>=0.1
             flag=1;
-        elseif abs(Tcout-C(TOUTLET))>=0.1
-            flag=1;
         end
     end
-    Hout=[H(1:3),Thout,H(ENTHALPY)-Q];
-    Cout=[C(1:3),Tcout,C(ENTHALPY)-Q];
+    Hout=[H(1:2),Thout,H(TOUTLET),H(ENTHALPY)-Q];
+    Cout=[C(1:2),Tcout,C(TOUTLET),C(ENTHALPY)-Q];
 end
