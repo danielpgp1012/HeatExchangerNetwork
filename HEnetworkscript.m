@@ -6,6 +6,7 @@
 ye=[1 0.5 330 160;2 3 220 50;3 1.5 220 105;4 2.5 205 320;5 1 95 150;6 2 40 205];
 Info=ye; %While debugging ye is used as an input
 %%Indeces
+global STREAMNO MCP TINLET TOUTLET ENTHALPY
 STREAMNO=1;
 MCP=2;
 TINLET=3;
@@ -121,10 +122,10 @@ NEB=NEB+length(HotCumHbrefined(HotCumHbrefined>0))+length(ColdCumHbrefined(ColdC
 %Above the pinch, hot stream cooling takes priority over cold stream
 %heating. 
 %% Sort according to heat capacities
-Hotstreamsabove=newquicksortdescending(Hotstreamsabove,1,sizeH,2);
-Coldstreamsabove=newquicksortdescending(Coldstreamsabove,1,sizeC,2);
-Hotstreamsbelow=newquicksortdescending(Hotstreamsbelow,1,sizeH,2);
-Coldstreamsbelow=newquicksortdescending(Coldstreamsbelow,1,sizeC,2);
+Hotstreamsabove=newquicksortcoldescending(Hotstreamsabove,1,sizeH,2);
+Coldstreamsabove=newquicksortcoldescending(Coldstreamsabove,1,sizeC,2);
+Hotstreamsbelow=newquicksortcoldescending(Hotstreamsbelow,1,sizeH,2);
+Coldstreamsbelow=newquicksortcoldescending(Coldstreamsbelow,1,sizeC,2);
 %First try without splitting. Big loop cycles through hot streams
 
 
