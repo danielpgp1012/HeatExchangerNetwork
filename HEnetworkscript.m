@@ -122,12 +122,11 @@ NEB=NEB+length(HotCumHbrefined(HotCumHbrefined>0))+length(ColdCumHbrefined(ColdC
 %Above the pinch, hot stream cooling takes priority over cold stream
 %heating. 
 %% Sort according to heat capacities
-Hotstreamsabove=newquicksortcoldescending(Hotstreamsabove,1,sizeH,2);
-Coldstreamsabove=newquicksortcoldescending(Coldstreamsabove,1,sizeC,2);
-Hotstreamsbelow=newquicksortcoldescending(Hotstreamsbelow,1,sizeH,2);
-Coldstreamsbelow=newquicksortcoldescending(Coldstreamsbelow,1,sizeC,2);
+Hotstreamsabove=newquicksortcoldescending(Hotstreamsabove,1,sizeH,TINLET);
+Coldstreamsabove=newquicksortcoldescending(Coldstreamsabove,1,sizeC,TOUTLET);
+Hotstreamsbelow=newquicksortcoldescending(Hotstreamsbelow,1,sizeH,TINLET);
+Coldstreamsbelow=newquicksortcoldescending(Coldstreamsbelow,1,sizeC,TOUTLET);
 %First try without splitting. Big loop cycles through hot streams
-
 
 
             

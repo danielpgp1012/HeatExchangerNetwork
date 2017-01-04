@@ -6,6 +6,7 @@
 ye=[1 0.5 330 160;2 3 220 50;3 1.5 220 105;4 2.5 205 320;5 1 95 150;6 2 40 205];
 Info=ye; %While debugging ye is used as an input
 %%Indeces
+global STREAMNO MCP TINLET TOUTLET ENTHALPY
 STREAMNO=1;
 MCP=2;
 TINLET=3;
@@ -79,10 +80,10 @@ for i=1:sizeC
         ColdCumHb(i)=(Coldstreams(i,TOUTLET)-Coldstreams(i,TINLET))*Coldstreams(i,MCP);
         Coldstreamsbelow(b,:)=[Coldstreams(i,:),ColdCumHb(i)];
     end
-    if Coldstreamsabove(a,ENTHALP)<0.1 %make row=0
+    if Coldstreamsabove(a,ENTHALPY)<0.1 %make row=0
        Coldstreamsabove(a,:)=zeros(1,5);
     end
-    if Coldstreamsbelow(b,5)<0.1 %make row =0 if no heat can be transferred
+    if Coldstreamsbelow(b,ENTHALPY)<0.1 %make row =0 if no heat can be transferred
        Coldstreamsbelow(b,:)=zeros(1,5);
     end
     a=a+1;
@@ -121,12 +122,12 @@ NEB=NEB+length(HotCumHbrefined(HotCumHbrefined>0))+length(ColdCumHbrefined(ColdC
 %Above the pinch, hot stream cooling takes priority over cold stream
 %heating. 
 %% Sort according to heat capacities
-Hotstreamsabove=newquicksortdescending(Hotstreamsabove,1,sizeH,2);
-Coldstreamsabove=newquicksortdescending(Coldstreamsabove,1,sizeC,2);
-Hotstreamsbelow=newquicksortdescending(Hotstreamsbelow,1,sizeH,2);
-Coldstreamsbelow=newquicksortdescending(Coldstreamsbelow,1,sizeC,2);
+Hotstreamsabove=newquicksortcoldescending(Hotstreamsabove,1,sizeH,TINLET);
+Coldstreamsabove=newquicksortcoldescending(Coldstreamsabove,1,sizeC,TOUTLET);
+Hotstreamsbelow=newquicksortcoldescending(Hotstreamsbelow,1,sizeH,TINLET);
+Coldstreamsbelow=newquicksortcoldescending(Coldstreamsbelow,1,sizeC,TOUTLET);
 %First try without splitting. Big loop cycles through hot streams
-
+for 
 
 
             
